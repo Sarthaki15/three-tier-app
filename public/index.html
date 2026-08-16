@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Task Tracker — 3-Tier Reference App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="page">
+
+    <header class="hero">
+      <p class="eyebrow">REFERENCE BUILD · 001</p>
+      <h1>Task Tracker</h1>
+      <p class="hero-sub">A deliberately small app that draws its own architecture — presentation, logic, and data, each in a separate box, each doing exactly one job.</p>
+    </header>
+
+    <!-- SIGNATURE ELEMENT: live architecture diagram -->
+    <section class="diagram" aria-label="System architecture">
+      <div class="tier" id="tier-1" data-tier="1">
+        <span class="tier-tag">TIER 1</span>
+        <span class="tier-name">Browser</span>
+        <span class="tier-desc">HTML / CSS / JS</span>
+      </div>
+      <div class="wire" id="wire-12">
+        <span class="wire-label">fetch()</span>
+      </div>
+      <div class="tier" id="tier-2" data-tier="2">
+        <span class="tier-tag">TIER 2</span>
+        <span class="tier-name">Server</span>
+        <span class="tier-desc">Express · REST API</span>
+      </div>
+      <div class="wire" id="wire-23">
+        <span class="wire-label">SQL</span>
+      </div>
+      <div class="tier" id="tier-3" data-tier="3">
+        <span class="tier-tag">TIER 3</span>
+        <span class="tier-name">Database</span>
+        <span class="tier-desc">SQLite</span>
+      </div>
+    </section>
+
+    <main class="panel">
+      <form id="task-form" class="task-form">
+        <input
+          type="text"
+          id="task-input"
+          placeholder="Add a task…"
+          maxlength="140"
+          autocomplete="off"
+          required
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      <p id="error-msg" class="error-msg" role="alert" hidden></p>
+
+      <ul id="task-list" class="task-list"></ul>
+
+      <p id="empty-state" class="empty-state" hidden>
+        Nothing here yet — add your first task above.
+      </p>
+    </main>
+
+    <footer class="footnote">
+      <p>Every action above round-trips through all three tiers: the browser calls the API, the API validates and queries, SQLite persists the row, and the response flows back up.</p>
+    </footer>
+
+  </div>
+
+<script src="app.js"></script>
+</body>
+</html>
