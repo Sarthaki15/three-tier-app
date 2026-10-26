@@ -19,3 +19,9 @@ spec:
         image: sarthakiparad2230/three-tier-app:v1
         ports:
         - containerPort: 3000
+        envFrom:
+          - secretRef:
+            name: three-tier-app-db-secrets
+        env:
+          - name: PORT
+            value: "3000"
