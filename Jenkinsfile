@@ -7,6 +7,7 @@ pipeline {
     
     environment {
         DOCKERHUB_REPO = 'sarthakiparad2230/three-tier-app'
+        EKS_CLUSTER_NAME = 'CD-Cluster'
     }
     
     stages {
@@ -28,15 +29,23 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'app-env-file', variable: 'APP_ENV_FILE_var')]) {
                     sh '''
-                           docker run -d \\
-                           --name test-app \\
-                           --env-file "$APP_ENV_FILE_var" \\
-                           -p 18080:3000 \\
-                           "$DOCKERHUB_REPO:$BUILD_NUMBER"
-                           sleep 10
-                           curl --fail http://localhost:18080/
-                           docker rm -f test-app
+                    docker rm -f test-app || true
+                    docker run -d \
+                    --name test-app \
+                    --env-file "$APP_ENV_FILE_var" \
+                    -p 8080:3000 \
+                    "$DOCKERHUB_REPO:$BUILD_NUMBER"
+                    sleep 10
+                    docker ps -a --filter "name=test-app"
+                    docker logs test-app
+                    curl --fail --retry 5 --retry-delay 2 \
+                    --retry-connrefused http://localhost:8080/
                     '''
+                }
+            }
+            post {
+                always {
+                    sh 'docker rm -f test-app || true'
                 }
             }
         }
@@ -54,23 +63,33 @@ pipeline {
                       '''
             }
         }
-        stage('Pull Image from Docker Hub') {
+        stage('Deploy to EKS') {
             steps {
-                withCredentials([file(credentialsId: 'app-env-file', variable: 'APP_ENV_FILE_var')]) {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_access_key', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                 sh '''
-                docker pull "$DOCKERHUB_REPO:$BUILD_NUMBER"
-                docker rm -f three-tier-app || true
-                docker run -d -p 8080:3000 --name three-tier-app --restart unless-stopped --env-file "$APP_ENV_FILE_var" "$DOCKERHUB_REPO:$BUILD_NUMBER"
+                aws sts get-caller-identity
+                aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME"
+                kubectl get nodes
+                kubectl delete deployment --all
+                kubectl apply -f kubernetes/secrets.yaml
+                kubectl apply -f kubernetes/deployment.yaml
+                kubectl apply -f kubernetes/service.yaml
                 '''
                 }
             }
         }
-        stage('Verify Deployment') {
+        stage('Verify Kubernetes Deployment') {
             steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_access_key', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                 sh '''
-                    docker ps --filter "name=three-tier-app"
-                    curl --fail http://localhost:8080/
+                aws sts get-caller-identity
+                aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME"
+                kubectl get nodes
+                kubectl get deployment 
+                    kubectl get pods
+                    kubectl get services
                 '''
+                }
             }
         }
     }
