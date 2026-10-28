@@ -272,6 +272,3 @@ Then open `http://<node-public-ip>:30080` in your browser.
 
 ---
 
-## License
-
-Add a license of your choice (e.g., MIT).
